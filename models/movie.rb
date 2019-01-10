@@ -75,9 +75,16 @@ def remaining_budget()
   values = [@id]
   stars = SqlRunner.run(sql, values)
   total = 0
-  for star in stars
-    total += star["fee"].to_i
-  end
+  # for star in stars
+  #   total += star["fee"].to_i
+  # end
+  # budget = @budget.to_i
+  # remaining = budget - total
+  # return remaining
+
+  fee_array = []
+  stars.each{|star| fee_array << star["fee"].to_i}
+  total = fee_array.reduce{|sum,fee| sum + fee}
   budget = @budget.to_i
   remaining = budget - total
   return remaining
