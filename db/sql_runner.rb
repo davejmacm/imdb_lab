@@ -14,5 +14,3 @@ class SqlRunner
 end
 
 end
-
-  end
