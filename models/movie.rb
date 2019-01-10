@@ -3,22 +3,24 @@ require_relative('../db/sql_runner')
 class Movie
 
   attr_reader :id
-  attr_accessor :title, :genre
+  attr_accessor :title, :genre, :budget
 
  def initialize(options)
    @id = options['id'].to_i if options['id']
    @title = options['title']
    @genre = options['genre']
+   @budget = options['budget']
 end
 
 def save()
   sql = "INSERT INTO movies(
         title,
-        genre
+        genre,
+        budget
         )
-        VALUES ($1, $2)
+        VALUES ($1, $2, $3)
         RETURNING id"
-        values = [@title, @genre]
+        values = [@title, @genre, @budget]
         movie = SqlRunner.run(sql, values).first
         @id = movie['id'].to_i
 end
@@ -44,13 +46,42 @@ end
 def update()
   sql = "UPDATE movies
   SET(
-    title, genre
+    title, genre, budget
     )
     =
-    ($1, $2)
-    WHERE id = $3"
-    values = [@title, @genre, @id]
+    ($1, $2, $3)
+    WHERE id = $4"
+    values = [@title, @genre, @budget, @id]
     SqlRunner.run(sql, values)
+end
+
+def stars()
+  sql = "SELECT stars.*
+        FROM stars
+        INNER JOIN castings
+          ON castings.star_id = stars.id
+        WHERE castings.movie_id = $1"
+  values = [@id]
+  stars = SqlRunner.run(sql, values)
+  return stars.map{|star| Star.new(star)}
+end
+
+def remaining_budget()
+  sql = "SELECT fee
+        FROM stars
+        INNER JOIN castings
+          ON castings.star_id = stars.id
+        WHERE castings.movie_id = $1"
+  values = [@id]
+  stars = SqlRunner.run(sql, values)
+  total = 0
+  for star in stars
+    total += star["fee"].to_i
+  end
+  budget = @budget.to_i
+  remaining = budget - total
+  return remaining
+
 end
 
 end
